@@ -125,6 +125,8 @@ Grid.prototype.addRandomTile = function () {
     var tile = new Tile(this.randomAvailableCell(), value);
 
     this.insertTile(tile);
+
+    return tile
   }
 };
 
@@ -235,8 +237,8 @@ Grid.prototype.move = function (direction) {
 };
 
 Grid.prototype.computerMove = function() {
-  this.addRandomTile();
   this.playerTurn = true;
+  return this.addRandomTile();
 }
 
 // Build a list of positions to traverse in the right order

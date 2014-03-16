@@ -38,17 +38,45 @@ GameManager.prototype.restart = function () {
 
 // Set up the game
 GameManager.prototype.setup = function () {
-  this.grid         = new Grid(this.size);
+  this.grid = new Grid(this.size);
   this.grid.addStartTiles();
-
-  this.ai           = new AI(this.grid);
 
   this.score        = 0;
   this.over         = false;
   this.won          = false;
 
+  var this$ = this
+
+  var worker = this.worker = new Worker('js/ai_worker.js')
+  worker.addEventListener('message', function(e) {
+    var data = e.data
+    if(!data.ok) {
+      return console.log('Command failed = ' + data.cmd)
+    } else if(data.won) {
+      return console.log('WE WON')
+    }
+
+    switch(data.cmd) {
+    case 'setup':
+      this.postMessage({cmd: 'best'})
+      break
+    case 'best':
+      var move = this$.move(data.best)
+      if(!this$.won) {
+        this.postMessage({cmd: 'move', tile: move})
+      }
+      break
+    case 'move':
+      this.postMessage({cmd: 'best'})
+      break
+    }
+
+  }, false)
+
   // Update the actuator
   this.actuate();
+
+  worker.postMessage({cmd: 'setup', size: this.size, state: this.grid})
 };
 
 
@@ -66,9 +94,11 @@ GameManager.prototype.move = function(direction) {
   var result = this.grid.move(direction);
   this.score += result.score;
 
+  var tile
+
   if (!result.won) {
     if (result.moved) {
-      this.grid.computerMove();
+      tile = this.grid.computerMove();
     }
   } else {
     this.won = true;
@@ -81,6 +111,8 @@ GameManager.prototype.move = function(direction) {
   }
 
   this.actuate();
+
+  return tile
 }
 
 // moves continuously until game is over

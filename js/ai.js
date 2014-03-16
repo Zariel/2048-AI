@@ -1,3 +1,5 @@
+minSearchTime = 100;
+
 function AI(grid) {
   this.grid = grid;
 }
@@ -235,4 +237,3 @@ AI.prototype.translate = function(move) {
     3: 'left'
   }[move];
 }
-
